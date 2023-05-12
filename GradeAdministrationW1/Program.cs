@@ -36,13 +36,11 @@
         this.Frozen = false;
     }
 
-    // Overload that doesn’t have a date parameter and initializes the Date property with DateTime.Now
-    public Grade(double value, int examCode, string note, bool isNow)
+    public Grade(double value, int examCode, DateTime date)
     {
         SetValue(value);
-        this.Date = DateTime.Now;
+        this.Date = date;
         this.ExamCode = examCode;
-        this.Note = note;
         this.Frozen = false;
     }
 

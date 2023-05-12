@@ -46,11 +46,8 @@
 
     public void SetValue(double value)
     {
-        if (value < 1 || value > 10 || (value * 2) % 1 != 0 || Frozen)
-        {
-            throw new ArgumentException("Invalid grade value.");
-        }
-        this.Value = value;
+        if (!Frozen && value >= 1 && value <= 10 && value % 0.5 == 0)
+            this.Value = value;
     }
 
 
@@ -60,14 +57,61 @@
 
 public class Student
 {
-    public string FirstName { }
-    public string LastName { }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
     public string FullName => $"{FirstName} {LastName}";
-    public int StudentNumber { }
-    public DateTime BirthDate { }
+    public int StudentNumber { get; }
+    public DateTime BirthDate { get; }
+    private List<Grade> grades;
 
+    // Constructor with only name and student number
+    public Student(string firstName, string lastName, int studentNumber)
+    {
+        this.FirstName = firstName;
+        this.LastName = lastName;
+        this.StudentNumber = studentNumber;
+        this.grades = new List<Grade>();
+    }
+
+    // Constructor with all details
+    public Student(string firstName, string lastName, int studentNumber, DateTime birthDate)
+    {
+        this.FirstName = firstName;
+        this.LastName = lastName;
+        this.StudentNumber = studentNumber;
+        this.BirthDate = birthDate;
+        this.grades = new List<Grade>();
+    }
+
+    public void SetGrade(int examCode, double value, bool isFinal)
+    {
+
+    }
+
+
+
+    public void PrintGrades()
+    {
+
+    }
+
+    public void PrintGrades(DateTime start, DateTime end)
+    {
+
+    }
+
+    public List<Grade> GradesFor(int examCode)
+    {
+
+    }
+
+    public double GradePointAverage()
+    {
+
+    }
 
 }
+
 
 public class Administration
 {

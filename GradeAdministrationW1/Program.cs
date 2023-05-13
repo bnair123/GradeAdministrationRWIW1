@@ -245,7 +245,7 @@ public class Program
                 Console.WriteLine("Please enter the students number: ");
                 int studentNumberC1 = int.Parse(Console.ReadLine());
                 Console.WriteLine("Please enter the exam code");
-                int examCode = int.Parse(Console.ReadLine());
+                int examCode1 = int.Parse(Console.ReadLine());
                 Console.WriteLine("Please enter the grade");
                 double value = double.Parse(Console.ReadLine());
 
@@ -253,7 +253,7 @@ public class Program
                 {
                     Student studentGA = administration.getStudent(studentNumberC1);
 
-                    studentGA.SetGrade(examCode, value);
+                    studentGA.SetGrade(examCode1, value);
                 }
 
                 else

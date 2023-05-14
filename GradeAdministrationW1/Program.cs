@@ -186,7 +186,7 @@ public class Administration
 
     public void AddStudent(int studentNumber, string firstName, string lastName)
     {
-        Student student = new Student(firstName, lastName, studentNumber); //Change from var to Student
+        Student student = new Student(firstName, lastName, studentNumber); 
         Students.Add(student);
     }
 
@@ -262,7 +262,7 @@ public class Administration
         }
         else
         {
-            return 0.0; // or NaN, depending on how you want to handle this case
+            return 0.0; 
         }
     }
 

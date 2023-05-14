@@ -113,30 +113,26 @@ public class Student
                 if (!grade.Frozen)
                 {
                     grade.Value = value;
-
                     break;
                 }
-
                 else
                 {
-                    int date = Int32.Parse(DateTime.Now.ToString("MM/dd/yyyy"));
+                    int date = Int32.Parse(DateTime.Now.ToString("yyyyMMdd"));
                     int newExamCode = int.Parse(examCode.ToString() + date.ToString());
-                    Grade newGrade = new Grade(value, newExamCode);
+                    Grade newGrade = new Grade(value, newExamCode, DateTime.Now);
                     grades.Add(newGrade);
+                    break;
                 }
-
-
             }
-
-            if (!examExists)
-            {
-                var newGrade = new Grade(value, examCode);
-                grades.Add(newGrade);
-            }
-
         }
 
+        if (!examExists)
+        {
+            var newGrade = new Grade(value, examCode, DateTime.Now);
+            grades.Add(newGrade);
+        }
     }
+
 
 
     public void PrintGrades()
@@ -146,10 +142,8 @@ public class Student
         foreach (var grade in sortedGrades)
         {
             Console.WriteLine(grade.ToString());
-            Console.WriteLine("Printed!");
         }
 
-        Console.WriteLine("Done!");
     }
 
     public void PrintGrades(DateTime startDate, DateTime endDate)
@@ -170,47 +164,6 @@ public class Student
 
         return gradeForExamCode;
     }
-
-    public double GradePointAverage()
-    {
-        double tempGrade = 0.00;//Bc its double so good habit
-        int gradeCount = 0;
-
-        foreach (var grade in grades)
-        {
-            foreach (var otherGrade in grades)
-            {
-                if(otherGrade.ExamCode.ToString().StartsWith(grade.ExamCode.ToString()))
-                {
-                    double highestGrade = 0.00;
-
-                    if (otherGrade.Value > grade.Value)
-                    {
-                        highestGrade = otherGrade.Value;
-                    }
-                    else
-                    {
-                        highestGrade = grade.Value;
-                    }
-
-                    tempGrade += highestGrade;
-                    gradeCount++;
-                }
-                else
-                {
-                    tempGrade += grade.Value;
-                    gradeCount++;
-                }
-                
-            }
-        }
-
-        tempGrade /= gradeCount;
-
-        return tempGrade;
-    }
-
-    
 
     public override string ToString()
     {
@@ -277,6 +230,42 @@ public class Administration
             }
         }
     }
+
+    public double GradePointAverage(int studentNumber)
+    {
+        var student = getStudent(studentNumber);
+
+        if (student == null)
+        {
+            throw new ArgumentException("Student number not found");
+        }
+
+        double tempGrade = 0.0;
+        int gradeCount = 0;
+
+        foreach (var grade in student.grades)
+        {
+            var similarExams = student.grades.Where(g => g.ExamCode.ToString().StartsWith(grade.ExamCode.ToString())).ToList();
+
+            if (similarExams.Count > 0)
+            {
+                var highestGrade = similarExams.Max(g => g.Value);
+                tempGrade += highestGrade;
+                gradeCount++;
+            }
+        }
+
+        if (gradeCount > 0)
+        {
+            tempGrade /= gradeCount;
+            return tempGrade;
+        }
+        else
+        {
+            return 0.0; // or NaN, depending on how you want to handle this case
+        }
+    }
+
 
     public void populateStudents()
     {
@@ -385,7 +374,26 @@ public class Program
                     {
                         Student studentPG = administration.getStudent(studentNumberC5);
 
-                        studentPG.PrintGrades();
+                        Console.WriteLine("Do you want to see grades within a certain time frame? (yes/no)");
+                        string answer = Console.ReadLine();
+
+                        if (answer.ToLower() == "yes")
+                        {
+                            Console.WriteLine("Please enter the start date (In DD/MM/YYYY): ");
+                            DateTime startDate = DateTime.Parse(Console.ReadLine());
+                            Console.WriteLine("Please enter the end date (In DD/MM/YYYY): ");
+                            DateTime endDate = DateTime.Parse(Console.ReadLine());
+
+                            studentPG.PrintGrades(startDate, endDate);
+                        }
+                        else
+                        {
+                            studentPG.PrintGrades();
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Student not found!");
                     }
 
                     break;
@@ -393,13 +401,8 @@ public class Program
                 case 6:
                     Console.WriteLine("Please enter the student number: ");
                     int studentNumberC6 = int.Parse(Console.ReadLine());
-                    if (administration.studentExists(studentNumberC6))
-                    {
-                        Student studentPGPA = administration.getStudent(studentNumberC6);
-
-                        Console.WriteLine(studentPGPA.GradePointAverage());
-                    }
-
+                    Console.WriteLine(administration.GradePointAverage(studentNumberC6));
+                    
                     break;
                 case 7:
                     administration.populateStudents();

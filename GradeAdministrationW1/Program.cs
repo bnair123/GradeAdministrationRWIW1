@@ -3,16 +3,28 @@ using System.Diagnostics;
 
 public class Grade
 {
-    public double Value { get; set {}; } //Add to setter
+    private double _value;
+
+    public double Value
+    {
+        get => _value;
+        set
+        {
+            if (value >= 1 && value <= 10 && value % 0.5 == 0)
+            {
+                _value = value;
+            }
+        }
+    }
     public DateTime Date { get; }
-    public int  ExamCode { get; }
+    public int ExamCode { get; }
     public string Note { get; }
     public bool Frozen { get; set; }
 
     // Constructor with all details
     public Grade(double value, int examCode, string note, DateTime date)
     {
-        SetValue(value);
+        this.Value = value;
         this.Date = date;
         this.ExamCode = examCode;
         this.Note = note;
@@ -22,7 +34,7 @@ public class Grade
     // Constructor with only exam code and value
     public Grade(double value, int examCode)
     {
-        SetValue(value);
+        this.Value = value; 
         this.Date = DateTime.Now;
         this.ExamCode = examCode;
         this.Note = string.Empty;
@@ -32,7 +44,7 @@ public class Grade
     // Constructor with exam code, value, and note
     public Grade(double value, int examCode, string note)
     {
-        SetValue(value);
+        this.Value = value;
         this.Date = DateTime.Now;
         this.ExamCode = examCode;
         this.Note = note;
@@ -41,7 +53,7 @@ public class Grade
 
     public Grade(double value, int examCode, DateTime date)
     {
-        SetValue(value);
+        this.Value = value;
         this.Date = date;
         this.ExamCode = examCode;
         this.Frozen = false;
@@ -49,7 +61,7 @@ public class Grade
 
     public void SetValue(double value)
     {
-        if (!Frozen && value >= 1 && value <= 10 && value % 0.5 == 0)
+        if (value >= 1 && value <= 10 && value % 0.5 == 0)
             this.Value = value;
     }
 
@@ -67,7 +79,7 @@ public class Student
     public string FullName => $"{FirstName} {LastName}";
     public int StudentNumber { get; }
     public DateTime BirthDate { get; }
-    private List<Grade> grades;
+    public List<Grade> grades;
 
     // Constructor with only name and student number
     public Student(string firstName, string lastName, int studentNumber)
@@ -118,8 +130,8 @@ public class Student
 
             if (!examExists)
             {
-                var newGrade= new Grade (value, examCode);
-                grades.Add (newGrade);
+                var newGrade = new Grade(value, examCode);
+                grades.Add(newGrade);
             }
 
         }
@@ -129,57 +141,89 @@ public class Student
 
     public void PrintGrades()
     {
-        foreach (var grade in grades)
+        var sortedGrades = grades.OrderBy(x => x.Date);
+
+        foreach (var grade in sortedGrades)
+        {
+            Console.WriteLine(grade.ToString());
+            Console.WriteLine("Printed!");
+        }
+
+        Console.WriteLine("Done!");
+    }
+
+    public void PrintGrades(DateTime startDate, DateTime endDate)
+    {
+        var sortedGrades = grades.OrderBy(x => x.Date).ToList();
+        sortedGrades = sortedGrades.Where(x=>(x.Date >= startDate && x.Date <= endDate)).ToList();
+
+        foreach (var grade in sortedGrades)
         {
             Console.WriteLine(grade.ToString());
         }
     }
 
+    public List<Grade> gradesFor(int examCode)
+    {
+        List<Grade> gradeForExamCode;
+        gradeForExamCode = grades.Where(x => x.ExamCode == examCode).ToList();
+
+        return gradeForExamCode;
+    }
 
     public double GradePointAverage()
     {
-        double tempGrade = 0;
+        double tempGrade = 0.00;//Bc its double so good habit
+        int gradeCount = 0;
 
         foreach (var grade in grades)
         {
-            tempGrade += grade.Value;
+            foreach (var otherGrade in grades)
+            {
+                if(otherGrade.ExamCode.ToString().StartsWith(grade.ExamCode.ToString()))
+                {
+                    double highestGrade = 0.00;
+
+                    if (otherGrade.Value > grade.Value)
+                    {
+                        highestGrade = otherGrade.Value;
+                    }
+                    else
+                    {
+                        highestGrade = grade.Value;
+                    }
+
+                    tempGrade += highestGrade;
+                    gradeCount++;
+                }
+                else
+                {
+                    tempGrade += grade.Value;
+                    gradeCount++;
+                }
+                
+            }
         }
 
-        tempGrade /= grades.Count;
+        tempGrade /= gradeCount;
 
         return tempGrade;
     }
 
-    public void FreezeGrades(int examCode)
-    {
-        foreach (Grade grade in grades)
-        {
-            if (grade.ExamCode == examCode)
-            {
-                grade.Frozen = true;
-            }
-        }
-    }
+    
 
     public override string ToString()
     {
         return FullName + " " + StudentNumber;
     }
 
-    public void PrintAllStudents()
-    {
-        foreach (var student in Student)
-        {
-            Console.WriteLine(student);
-        }
-    }
 
 }
 
 
 public class Administration
 {
-    public List<Student> Students = new List<Student>(); 
+    public List<Student> Students = new List<Student>();
 
     public void AddStudent(int studentNumber, string firstName, string lastName, DateTime birthDate)
     {
@@ -189,28 +233,26 @@ public class Administration
 
     public void AddStudent(int studentNumber, string firstName, string lastName)
     {
-        var student = new Student(firstName, lastName, studentNumber);
+        Student student = new Student(firstName, lastName, studentNumber); //Change from var to Student
         Students.Add(student);
     }
 
-    public Student studentExists(int studentNumber)
+    public bool studentExists(int studentNumber)
     {
-        bool Existant = false;
-
+        bool isExists = false;
         foreach (var student in Students)
         {
             if (student.StudentNumber == studentNumber)
             {
-                Existant = true;
-                break;
+                isExists = true;
             }
         }
-
+        return isExists;
     }
 
     public Student getStudent(int studentNumber)
     {
-        return Students.Find(Student.StudentNumber);
+        return Students.FirstOrDefault(x => x.StudentNumber == studentNumber);
     }
 
     public void PrintAllStudents()
@@ -219,6 +261,48 @@ public class Administration
         {
             Console.WriteLine($"{student.FullName} has the student number {student.StudentNumber} with a Date of Birth of {student.BirthDate} ");
         }
+        Console.WriteLine("\n");
+    }
+
+    public void FreezeExam(int examCode)
+    {
+        foreach (Student student in Students)
+        {
+            foreach (Grade grade in student.grades)
+            {
+                if (grade.ExamCode == examCode)
+                {
+                    grade.Frozen = true;
+                }
+            }
+        }
+    }
+
+    public void populateStudents()
+    {
+        Student student1 = new Student("Bharath", "Nair", 530070); 
+        Students.Add(student1);
+        Student student2 = new Student("John", "Doe", 000001);
+        Students.Add(student2);
+        Student student3 = new Student("Micheal", "Farrage", 420001); 
+        Students.Add(student3);
+        Student student4 = new Student("John", "Cena", 101010); 
+        Students.Add(student4);
+        Student student5 = new Student("Donald", "Trump", 999999); 
+        Students.Add(student5);
+    }
+
+    public void populateGrade()
+    {
+        foreach (Student student in Students)
+        {
+            student.SetGrade(1111, 5.5);
+            student.SetGrade(1010, 5);
+            student.SetGrade(1234, 8);
+            student.SetGrade(4321, 6);
+            student.SetGrade(9191, 2);
+
+        }
     }
 }
 
@@ -226,92 +310,107 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        Student studentFiller = new Student("John", "Doe", 12345);
-        var administration = new Administration();
+        //Student studentFiller = new Student("John", "Doe", 12345);
+        Administration administration = new Administration();
 
-        Console.WriteLine("Please enter your desired action\n");
-        Console.WriteLine("1. Add a grade\n");
-        Console.WriteLine("2. Add a Student\n");
-        Console.WriteLine("3. Print all students\n");
-        Console.WriteLine("4. Freeze grades\n");
-        Console.WriteLine("5. Print student grades\n");
-        Console.WriteLine("6. Print student GPA");
+        int option = 0;
 
-        int option = int.Parse(Console.ReadLine());
-
-        switch (option)
+        do
         {
-            case 1:
-                Console.WriteLine("Please enter the students number: ");
-                int studentNumberC1 = int.Parse(Console.ReadLine());
-                Console.WriteLine("Please enter the exam code");
-                int examCode1 = int.Parse(Console.ReadLine());
-                Console.WriteLine("Please enter the grade");
-                double value = double.Parse(Console.ReadLine());
+            Console.WriteLine("Please enter your desired action\n");
+            Console.WriteLine("1. Add a grade\n");
+            Console.WriteLine("2. Add a Student\n");
+            Console.WriteLine("3. Print all students\n");
+            Console.WriteLine("4. Freeze grades\n");
+            Console.WriteLine("5. Print student grades\n");
+            Console.WriteLine("6. Print student GPA\n");
+            Console.WriteLine("7. Populate students\n");
+            Console.WriteLine("8. Populate grades for students\n");
+            Console.WriteLine("9. Quit\n");
+            option = int.Parse(Console.ReadLine());
 
-                if (administration.studentExists(studentNumberC1))
-                {
-                    Student studentGA = administration.getStudent(studentNumberC1);
+            switch (option)
+            {
+                case 1:
+                    Console.WriteLine("Please enter the students number: ");
+                    int studentNumberC1 = int.Parse(Console.ReadLine());
+                    Console.WriteLine("Please enter the exam code");
+                    int examCode1 = int.Parse(Console.ReadLine());
+                    Console.WriteLine("Please enter the grade");
+                    double value = double.Parse(Console.ReadLine());
 
-                    studentGA.SetGrade(examCode1, value);
-                }
+                    if (administration.studentExists(studentNumberC1))
+                    {
+                        Student studentGA = administration.getStudent(studentNumberC1);
 
-                else
-                {
-                    Console.WriteLine("Student not found!");
-                }
+                        studentGA.SetGrade(examCode1, value);
+                    }
 
-                break;
+                    else
+                    {
+                        Console.WriteLine("Student not found!");
+                    }
 
-            case 2:
-                Console.WriteLine("Please enter their first name: ");
-                string firstName = Console.ReadLine();
-                Console.WriteLine("Please enter their last name: ");
-                string lastName = Console.ReadLine();
-                Console.WriteLine("Please enter their Student Number: ");
-                int studentNumberC2 = int.Parse(Console.ReadLine());
-                Console.WriteLine("Please enter their Date of Birth (In DD/MM/YYYY)");
-                DateTime dob = DateTime.Parse(Console.ReadLine());
+                    break;
 
-                administration.AddStudent(studentNumberC2, firstName, lastName, dob);
-                break;
+                case 2:
+                    Console.WriteLine("Please enter their first name: ");
+                    string firstName = Console.ReadLine();
+                    Console.WriteLine("Please enter their last name: ");
+                    string lastName = Console.ReadLine();
+                    Console.WriteLine("Please enter their Student Number: ");
+                    int studentNumberC2 = int.Parse(Console.ReadLine());
+                    Console.WriteLine("Please enter their Date of Birth (In DD/MM/YYYY)");
+                    DateTime dob = DateTime.Parse(Console.ReadLine());
 
-            case 3:
-                administration.PrintAllStudents();
-                break;
+                    administration.AddStudent(studentNumberC2, firstName, lastName, dob);
+                    break;
 
-            case 4:
-                Console.WriteLine("Please give the exam code to freeze");
-                int examCode = int.Parse(Console.ReadLine());
-                studentFiller.FreezeGrades(examCode);
-                break;
+                case 3:
+                    administration.PrintAllStudents();
+                    break;
 
-            case 5:
-                Console.WriteLine("Please enter the student number: ");
-                int studentNumberC5 = int.Parse(Console.ReadLine());
+                case 4:
+                    Console.WriteLine("Please give the exam code to freeze");
+                    int examCode = int.Parse(Console.ReadLine());
+                    administration.FreezeExam(examCode);
 
-                if (administration.studentExists(studentNumberC5))
-                {
-                    Student studentPG = administration.getStudent(studentNumberC5);
+                    break;
 
-                    studentPG.PrintGrades();
-                }
+                case 5:
+                    Console.WriteLine("Please enter the student number: ");
+                    int studentNumberC5 = int.Parse(Console.ReadLine());
 
-                break;
+                    if (administration.studentExists(studentNumberC5))
+                    {
+                        Student studentPG = administration.getStudent(studentNumberC5);
 
-            case 6:
-                Console.WriteLine("Please enter the student number: ");
-                int studentNumberC6 = int.Parse(Console.ReadLine());
-                if (administration.studentExists(studentNumberC6))
-                {
-                    Student studentPGPA = administration.getStudent(studentNumberC6);
+                        studentPG.PrintGrades();
+                    }
 
-                    Console.WriteLine(studentPGPA.GradePointAverage());
-                }
-                break;
-            default:
-                Console.WriteLine("Invalid input!");
-                break;
-        }
+                    break;
+
+                case 6:
+                    Console.WriteLine("Please enter the student number: ");
+                    int studentNumberC6 = int.Parse(Console.ReadLine());
+                    if (administration.studentExists(studentNumberC6))
+                    {
+                        Student studentPGPA = administration.getStudent(studentNumberC6);
+
+                        Console.WriteLine(studentPGPA.GradePointAverage());
+                    }
+
+                    break;
+                case 7:
+                    administration.populateStudents();
+                    break;
+                case 8:
+                    administration.populateGrade();
+                    break;
+                default:
+                    Console.WriteLine("Invalid input!");
+                    break;
+            }
+        } while (option != 9);
     }
 }
